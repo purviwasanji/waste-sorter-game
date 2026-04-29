@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌍 Trash Heroes - Waste Sorting Game!</title>
+<link href="https://fonts.googleapis.com/css2?family=Boogaloo&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --recycle: #3EC6E0;
+  --compost: #7BC67E;
+  --trash: #F28C38;
+  --hazard: #E05C97;
+  --ewaste: #9B59B6;
+  --bg: #0d1b2a;
+  --card: #16213e;
+  --gold: #FFD700;
+  --green: #7FFF00;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--bg);
+  min-height: 100vh;
+  overflow-x: hidden;
+  color: white;
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Ccircle cx='12' cy='12' r='10' fill='%23FFD700' opacity='0.8'/%3E%3Ccircle cx='12' cy='12' r='5' fill='%23FF8C00'/%3E%3C/svg%3E") 12 12, auto;
+}
+
+/* ======= SCREENS ======= */
+.screen { display:none; min-height:100vh; flex-direction:column; align-items:center; justify-content:center; padding:20px; position:relative; }
+.screen.active { display:flex; }
+
+/* ======= ANIMATED BG ======= */
+.sky-bg {
+  position:fixed; inset:0; z-index:0; overflow:hidden;
+  background: linear-gradient(180deg, #0d1b2a 0%, #1a2f50 40%, #0f3460 100%);
+}
+.cloud { position:absolute; border-radius:50px; background:rgba(255,255,255,0.06); animation:driftCloud linear infinite; }
+@keyframes driftCloud { from{transform:translateX(-300px)} to{transform:translateX(110vw)} }
+.floating-leaf { position:absolute; font-size:22px; animation:leafFall linear infinite; pointer-events:none; }
+@keyframes leafFall {
+  0%   { transform:translateY(-40px) rotate(0deg) translateX(0); opacity:0; }
+  10%  { opacity:1; }
+  90%  { opacity:1; }
+  100% { transform:translateY(110vh) rotate(360deg) translateX(60px); opacity:0; }
+}
+
+/* ======= INTRO SPLASH ======= */
+#intro-screen {
+  z-index:200;
+  background: linear-gradient(135deg,#0d1b2a,#0f3460,#1a2f50);
+}
+
+.intro-animals {
+  display:flex; gap:20px; align-items:flex-end; margin-bottom:30px;
+}
+
+.animal-char {
+  font-size:64px;
+  animation:animalBounce 1.5s ease-in-out infinite;
+  filter: drop-shadow(0 8px 20px rgba(0,0,0,0.5));
+  cursor:pointer;
+  transition:transform 0.1s;
+  position:relative;
+}
+.animal-char:hover { transform:scale(1.3) rotate(10deg) !important; }
+.animal-char:nth-child(1) { animation-delay:0s; font-size:70px; }
+.animal-char:nth-child(2) { animation-delay:0.3s; font-size:56px; }
+.animal-char:nth-child(3) { animation-delay:0.6s; font-size:74px; }
+.animal-char:nth-child(4) { animation-delay:0.9s; font-size:58px; }
+.animal-char:nth-child(5) { animation-delay:1.2s; font-size:68px; }
+@keyframes animalBounce {
+  0%,100%{transform:translateY(0) rotate(-3deg)}
+  50%{transform:translateY(-18px) rotate(3deg)}
+}
+
+.speech-bubble {
+  position:absolute; top:-55px; left:50%; transform:translateX(-50%);
+  background:white; color:#333; font-size:11px; font-weight:800;
+  padding:5px 10px; border-radius:12px; white-space:nowrap;
+  box-shadow:0 4px 12px rgba(0,0,0,0.3);
+  opacity:0; animation:bubblePop 3s ease-in-out infinite;
+  font-family:'Nunito',sans-serif;
+}
+.speech-bubble::after {
+  content:''; position:absolute; bottom:-8px; left:50%; transform:translateX(-50%);
+  border:8px solid transparent; border-top-color:white; border-bottom:none;
+}
+@keyframes bubblePop {
+  0%,20%,80%,100%{opacity:0;transform:translateX(-50%) scale(0.8)}
+  30%,70%{opacity:1;transform:translateX(-50%) scale(1)}
+}
+
+.intro-title {
+  font-family:'Boogaloo',cursive;
+  font-size:72px;
+  line-height:1;
+  background:linear-gradient(90deg,#FFD700,#FF6B9D,#00D4FF,#7FFF00,#FFD700);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-size:400%; animation:rainbow 3s linear infinite;
+  filter:drop-shadow(0 4px 20px rgba(255,215,0,0.4));
+}
+@keyframes rainbow{0%{background-position:0%}100%{background-position:400%}}
+
+.intro-subtitle {
+  font-size:20px; color:#aaa; font-weight:700; margin-top:8px; letter-spacing:2px; text-transform:uppercase;
+}
+
+.intro-kids-scene {
+  position:relative; width:100%; max-width:700px; height:200px; margin:30px 0;
+  background:rgba(255,255,255,0.04); border-radius:24px;
+  border:2px solid rgba(255,255,255,0.1); overflow:hidden;
+}
+
+/* Kids playing SVG scene */
+.scene-ground {
+  position:absolute; bottom:0; left:0; right:0; height:50px;
+  background:linear-gradient(180deg,#2d5a27,#1a3a12); border-radius:0 0 22px 22px;
+}
+.scene-tree { position:absolute; bottom:45px; font-size:70px; animation:treeSway 4s ease-in-out infinite; transform-origin:bottom center; }
+@keyframes treeSway { 0%,100%{transform:rotate(-2deg)} 50%{transform:rotate(2deg)} }
+
+.kid-svg { position:absolute; bottom:44px; animation:kidWalk linear infinite; }
+@keyframes kidWalk {
+  0%{left:-80px;} 100%{left:110%;}
+}
+.kid-svg.reverse { animation-direction:alternate; }
+
+.recycle-truck {
+  position:absolute; bottom:44px; right:-200px;
+  font-size:50px;
+  animation:truckDrive 8s linear infinite;
+}
+@keyframes truckDrive { 0%{right:-200px} 100%{right:110%} }
+
+.scene-sun { position:absolute; top:15px; right:30px; font-size:50px; animation:sunSpin 10s linear infinite; }
+@keyframes sunSpin { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
+
+.intro-play-btn {
+  position:relative; z-index:2;
+  background:linear-gradient(135deg,#FFD700,#FF8C00);
+  color:#000; font-family:'Boogaloo',cursive; font-size:32px;
+  padding:18px 70px; border:none; border-radius:60px; cursor:pointer;
+  box-shadow:0 0 40px rgba(255,215,0,0.6), 0 8px 30px rgba(0,0,0,0.4);
+  transition:all 0.3s; letter-spacing:2px;
+  animation:btnPulse 2s ease-in-out infinite;
+}
+@keyframes btnPulse { 0%,100%{box-shadow:0 0 40px rgba(255,215,0,0.6),0 8px 30px rgba(0,0,0,0.4)} 50%{box-shadow:0 0 80px rgba(255,215,0,0.9),0 8px 30px rgba(0,0,0,0.4)} }
+.intro-play-btn:hover { transform:scale(1.1) translateY(-4px); }
+
+.intro-best { margin-top:16px; font-size:14px; color:#888; font-weight:700; }
+.intro-best span { color:#FFD700; }
+
+/* ======= HOME SCREEN ======= */
+#home-screen { z-index:10; }
+
+.mode-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; max-width:560px; width:100%; margin:20px 0; }
+.mode-card {
+  background:rgba(255,255,255,0.07); border:3px solid rgba(255,255,255,0.1);
+  border-radius:22px; padding:20px 14px; cursor:pointer; transition:all 0.3s;
+  backdrop-filter:blur(10px); text-align:center; position:relative; overflow:hidden;
+}
+.mode-card::before { content:''; position:absolute; inset:0; opacity:0; transition:opacity 0.3s; background:radial-gradient(circle at 50% 0%,rgba(255,215,0,0.15),transparent 70%); }
+.mode-card:hover::before { opacity:1; }
+.mode-card:hover { transform:translateY(-8px) scale(1.03); border-color:rgba(255,255,255,0.3); }
+.mode-card.selected { border-color:#FFD700; background:rgba(255,215,0,0.12); }
+.mode-icon { font-size:42px; display:block; animation:iconFloat 3s ease-in-out infinite; }
+@keyframes iconFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+.mode-name { font-family:'Boogaloo',cursive; font-size:22px; margin-top:6px; }
+.mode-desc { font-size:12px; color:#bbb; margin-top:3px; }
+.mode-badge { display:inline-block; font-size:10px; font-weight:800; padding:2px 10px; border-radius:20px; text-transform:uppercase; letter-spacing:1px; margin-top:6px; }
+
+.diff-row { display:flex; gap:12px; margin:8px 0 18px; }
+.diff-btn {
+  padding:10px 22px; border-radius:50px; border:2px solid rgba(255,255,255,0.2);
+  background:rgba(255,255,255,0.06); color:white; cursor:pointer;
+  font-family:'Nunito',sans-serif; font-weight:800; font-size:14px; transition:all 0.3s;
+}
+.diff-btn:hover { transform:scale(1.08); }
+.diff-btn.easy { border-color:#7BC67E; color:#7BC67E; }
+.diff-btn.easy.active { background:#7BC67E; color:#000; }
+.diff-btn.medium { border-color:#FFD700; color:#FFD700; }
+.diff-btn.medium.active { background:#FFD700; color:#000; }
+.diff-btn.hard { border-color:#E05C97; color:#E05C97; }
+.diff-btn.hard.active { background:#E05C97; color:#000; }
+
+.start-btn {
+  background:linear-gradient(135deg,#FFD700,#FF8C00); color:#000;
+  font-family:'Boogaloo',cursive; font-size:30px;
+  padding:18px 65px; border:none; border-radius:60px; cursor:pointer;
+  box-shadow:0 8px 30px rgba(255,215,0,0.5); transition:all 0.3s; letter-spacing:1px;
+}
+.start-btn:hover { transform:translateY(-5px) scale(1.06); box-shadow:0 14px 45px rgba(255,215,0,0.7); }
+
+.section-label { font-size:12px; color:#888; font-weight:800; text-transform:uppercase; letter-spacing:2px; margin-bottom:8px; }
+
+/* ======= MASCOT SIDEBAR ======= */
+.mascot-area {
+  position:fixed; right:20px; bottom:80px; z-index:50; text-align:center;
+  pointer-events:none;
+}
+.mascot-main { font-size:60px; animation:mascotFloat 3s ease-in-out infinite; }
+@keyframes mascotFloat { 0%,100%{transform:translateY(0) rotate(-5deg)} 50%{transform:translateY(-12px) rotate(5deg)} }
+.mascot-bubble {
+  background:#fff; color:#333; border-radius:16px; padding:8px 12px;
+  font-size:11px; font-weight:800; max-width:130px; text-align:center;
+  margin-bottom:8px; box-shadow:0 4px 15px rgba(0,0,0,0.3); position:relative;
+  animation:bubbleAppear 0.3s ease;
+}
+@keyframes bubbleAppear { from{opacity:0;transform:scale(0.8)} to{opacity:1;transform:scale(1)} }
+.mascot-bubble::after {
+  content:''; position:absolute; bottom:-10px; left:50%; transform:translateX(-50%);
+  border:10px solid transparent; border-top-color:white; border-bottom:none;
+}
+
+/* ======= TUTORIAL ======= */
+.tutorial-overlay {
+  position:fixed; inset:0; z-index:180; display:none; align-items:center; justify-content:center;
+  background:rgba(0,0,0,0.85); backdrop-filter:blur(10px);
+}
+.tutorial-overlay.active { display:flex; }
+.tutorial-card {
+  background:linear-gradient(135deg,#1a1a2e,#16213e); border:2px solid rgba(255,255,255,0.15);
+  border-radius:28px; padding:32px; max-width:520px; width:90%; text-align:center;
+  box-shadow:0 30px 80px rgba(0,0,0,0.6);
+}
+.tutorial-step-title { font-family:'Boogaloo',cursive; font-size:32px; color:#FFD700; margin-bottom:14px; }
+.tutorial-bins { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:16px 0; }
+.tut-bin { border-radius:14px; padding:12px; text-align:center; width:90px; transition:transform 0.2s; cursor:default; }
+.tut-bin:hover { transform:scale(1.08); }
+.tut-bin-icon { font-size:32px; }
+.tut-bin-name { font-size:11px; font-weight:800; margin-top:4px; }
+.tut-animal { font-size:50px; margin:16px 0; animation:animalBounce 1.5s infinite; }
+.tutorial-tip { font-size:13px; color:#aaa; margin:6px 0; }
+.tut-next { background:linear-gradient(135deg,#FFD700,#FF8C00); color:#000; border:none; border-radius:50px; padding:14px 45px; font-family:'Boogaloo',cursive; font-size:24px; cursor:pointer; margin-top:18px; transition:transform 0.2s; }
+.tut-next:hover { transform:scale(1.06); }
+
+/* ======= HUD ======= */
+.hud {
+  display:flex; align-items:center; justify-content:space-between;
+  width:100%; max-width:900px; padding:10px 16px;
+  background:rgba(0,0,0,0.5); border-radius:18px; backdrop-filter:blur(10px);
+  z-index:10; border:1px solid rgba(255,255,255,0.1);
+  box-shadow:0 8px 30px rgba(0,0,0,0.4);
+}
+.hud-item { text-align:center; }
+.hud-label { font-size:9px; color:#888; text-transform:uppercase; letter-spacing:1px; font-weight:800; }
+.hud-value { font-family:'Boogaloo',cursive; font-size:26px; line-height:1.1; }
+.score-val { color:#FFD700; }
+.lives-val { color:#E05C97; }
+.streak-val { color:#00D4FF; }
+.level-val { color:#7FFF00; }
+.timer-bar-wrap { flex:1; margin:0 16px; height:14px; background:rgba(255,255,255,0.1); border-radius:10px; overflow:hidden; position:relative; }
+.timer-bar { height:100%; border-radius:10px; transition:width 0.1s linear; background:linear-gradient(90deg,#7FFF00,#FFD700,#FF4444); }
+.timer-bar-inner-glow { position:absolute; inset:0; background:inherit; filter:blur(4px); opacity:0.5; border-radius:10px; }
+
+/* ======= GAME SCREEN ======= */
+#game-screen { padding:10px; justify-content:flex-start; position:relative; overflow:hidden; }
+
+.game-area { width:100%; max-width:900px; flex:1; display:flex; flex-direction:column; align-items:center; z-index:10; margin-top:10px; }
+
+/* ANIMALS CHEERING ROW */
+.cheer-animals {
+  display:flex; gap:16px; justify-content:center; margin-bottom:8px; height:70px; align-items:flex-end;
+}
+.cheer-animal {
+  font-size:40px; cursor:pointer; transition:transform 0.15s;
+  animation:cheerIdle 2s ease-in-out infinite;
+  filter:drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+  position:relative;
+}
+.cheer-animal:nth-child(2) { animation-delay:0.4s; }
+.cheer-animal:nth-child(3) { animation-delay:0.8s; }
+.cheer-animal:nth-child(4) { animation-delay:1.2s; }
+.cheer-animal:nth-child(5) { animation-delay:1.6s; }
+@keyframes cheerIdle { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+.cheer-animal.celebrate { animation:animalCheer 0.6s ease !important; }
+@keyframes animalCheer { 0%{transform:translateY(0) scale(1)} 30%{transform:translateY(-20px) scale(1.4) rotate(15deg)} 60%{transform:translateY(-10px) scale(1.2) rotate(-10deg)} 100%{transform:translateY(0) scale(1)} }
+.cheer-animal.sad { animation:animalSad 0.5s ease !important; }
+@keyframes animalSad { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px) rotate(-10deg)} 75%{transform:translateX(8px) rotate(10deg)} }
+
+/* CONVEYOR */
+.conveyor-track {
+  width:100%; height:120px; background:rgba(0,0,0,0.35);
+  border-radius:18px; position:relative; overflow:hidden;
+  border:2px solid rgba(255,255,255,0.08); margin-bottom:12px;
+  box-shadow:inset 0 4px 20px rgba(0,0,0,0.4);
+}
+.conveyor-belt {
+  position:absolute; bottom:0; left:0; right:0; height:22px;
+  background:repeating-linear-gradient(90deg,#222 0px,#222 28px,#3a3a3a 28px,#3a3a3a 56px);
+  animation:belt 0.8s linear infinite;
+}
+@keyframes belt { 0%{background-position:0px} 100%{background-position:56px} }
+
+.waste-item {
+  position:absolute; top:8px;
+  font-size:56px; cursor:pointer;
+  user-select:none; transition:transform 0.2s;
+  filter:drop-shadow(0 6px 12px rgba(0,0,0,0.6));
+  z-index:5;
+}
+.waste-item:hover { transform:scale(1.25) rotate(12deg) !important; }
+.waste-item.moving { animation:wasteSlideIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275); }
+@keyframes wasteSlideIn { from{transform:scale(0) rotate(-30deg);opacity:0} to{transform:scale(1) rotate(0deg);opacity:1} }
+.waste-item.flying-out { animation:wasteFlying 0.4s ease-in forwards; }
+@keyframes wasteFlying { to{transform:scale(0) rotate(180deg);opacity:0} }
+
+.waste-label {
+  position:absolute; bottom:26px; left:50%; transform:translateX(-50%);
+  background:rgba(0,0,0,0.85); padding:3px 10px; border-radius:20px;
+  font-size:11px; font-weight:800; white-space:nowrap; color:white; pointer-events:none;
+  border:1px solid rgba(255,255,255,0.2);
+}
+
+/* BINS */
+.bins-row { display:flex; gap:10px; width:100%; justify-content:center; flex-wrap:wrap; }
+.bin {
+  flex:1; min-width:110px; max-width:160px;
+  border-radius:22px; padding:14px 8px; text-align:center;
+  cursor:pointer; transition:all 0.25s; border:3px solid transparent;
+  position:relative; overflow:hidden; background:rgba(0,0,0,0.3);
+  backdrop-filter:blur(6px);
+}
+.bin::before { content:''; position:absolute; inset:0; opacity:0; transition:opacity 0.2s; border-radius:19px; }
+.bin:hover::before { opacity:1; }
+.bin:hover { transform:translateY(-10px) scale(1.06); }
+.bin:active { transform:translateY(-4px) scale(0.97); }
+.bin[data-type="recycle"] { border-color:var(--recycle); background:rgba(62,198,224,0.12); }
+.bin[data-type="recycle"]::before { background:rgba(62,198,224,0.15); }
+.bin[data-type="compost"]  { border-color:var(--compost);  background:rgba(123,198,126,0.12); }
+.bin[data-type="compost"]::before  { background:rgba(123,198,126,0.15); }
+.bin[data-type="trash"]    { border-color:var(--trash);    background:rgba(242,140,56,0.12); }
+.bin[data-type="trash"]::before    { background:rgba(242,140,56,0.15); }
+.bin[data-type="hazard"]   { border-color:var(--hazard);   background:rgba(224,92,151,0.12); }
+.bin[data-type="hazard"]::before   { background:rgba(224,92,151,0.15); }
+.bin[data-type="ewaste"]   { border-color:var(--ewaste);   background:rgba(155,89,182,0.12); }
+.bin[data-type="ewaste"]::before   { background:rgba(155,89,182,0.15); }
+
+.bin.correct-flash { animation:correctFlash 0.4s ease; }
+@keyframes correctFlash { 0%,100%{filter:brightness(1)} 50%{filter:brightness(2.5) saturate(2)} }
+.bin.wrong-flash { animation:wrongFlash 0.4s ease; }
+@keyframes wrongFlash { 0%,100%{filter:brightness(1)} 25%,75%{filter:brightness(0.3) saturate(0)} }
+.bin.highlight { animation:binPulse 0.5s ease; }
+@keyframes binPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15) translateY(-5px)} }
+
+.bin-icon { font-size:40px; display:block; transition:transform 0.2s; }
+.bin:hover .bin-icon { transform:scale(1.2) rotate(-10deg); }
+.bin-name { font-family:'Boogaloo',cursive; font-size:16px; margin-top:4px; }
+.bin[data-type="recycle"] .bin-name { color:var(--recycle); }
+.bin[data-type="compost"]  .bin-name { color:var(--compost); }
+.bin[data-type="trash"]    .bin-name { color:var(--trash); }
+.bin[data-type="hazard"]   .bin-name { color:var(--hazard); }
+.bin[data-type="ewaste"]   .bin-name { color:var(--ewaste); }
+.bin-count { font-size:10px; color:#888; margin-top:2px; font-weight:700; }
+.bin-fill-bar { position:absolute; bottom:0; left:0; height:5px; transition:width 0.5s; border-radius:0 0 19px 19px; }
+.bin[data-type="recycle"] .bin-fill-bar { background:var(--recycle); }
+.bin[data-type="compost"]  .bin-fill-bar { background:var(--compost); }
+.bin[data-type="trash"]    .bin-fill-bar { background:var(--trash); }
+.bin[data-type="hazard"]   .bin-fill-bar { background:var(--hazard); }
+.bin[data-type="ewaste"]   .bin-fill-bar { background:var(--ewaste); }
+
+/* BIN animals */
+.bin-animal { position:absolute; top:-20px; right:-5px; font-size:22px; animation:binAnimalPeek 3s ease-in-out infinite; transform-origin:bottom center; }
+@keyframes binAnimalPeek { 0%,100%{transform:translateY(8px) rotate(-5deg)} 50%{transform:translateY(0) rotate(5deg)} }
+
+/* POWER-UPS */
+.powerup-row { display:flex; gap:10px; margin-top:10px; }
+.powerup-btn {
+  background:rgba(255,255,255,0.08); border:2px solid rgba(255,255,255,0.2);
+  border-radius:14px; padding:8px 14px; cursor:pointer; transition:all 0.25s;
+  font-size:12px; color:white; font-family:'Nunito',sans-serif; font-weight:800;
+  position:relative; overflow:hidden;
+}
+.powerup-btn::after { content:''; position:absolute; inset:0; background:rgba(255,255,255,0); transition:background 0.2s; }
+.powerup-btn:hover:not(:disabled)::after { background:rgba(255,255,255,0.1); }
+.powerup-btn:hover:not(:disabled) { transform:scale(1.08) translateY(-2px); border-color:rgba(255,255,255,0.4); }
+.powerup-btn:disabled { opacity:0.35; cursor:not-allowed; }
+.pu-icon { font-size:20px; display:block; }
+.pu-count { color:#FFD700; }
+
+/* KEY HINTS */
+.key-hints { display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; justify-content:center; }
+.key-hint { background:rgba(255,255,255,0.08); border-radius:8px; padding:4px 10px; font-size:10px; border:1px solid rgba(255,255,255,0.1); }
+.key-hint span { background:rgba(255,255,255,0.2); border-radius:4px; padding:1px 6px; font-family:monospace; font-weight:900; }
+
+/* FEEDBACK */
+.feedback-popup {
+  position:fixed; top:40%; left:50%; transform:translate(-50%,-50%);
+  font-family:'Boogaloo',cursive; font-size:54px; pointer-events:none;
+  z-index:100; animation:popupAnim 0.9s ease-out forwards;
+  text-shadow:0 4px 15px rgba(0,0,0,0.6);
+}
+@keyframes popupAnim { 0%{opacity:1;transform:translate(-50%,-60%) scale(0.4)} 50%{opacity:1;transform:translate(-50%,-85%) scale(1.3)} 100%{opacity:0;transform:translate(-50%,-130%) scale(1)} }
+
+/* PARTICLES ON CORRECT */
+.particle { position:fixed; pointer-events:none; z-index:99; font-size:20px; animation:particleFly linear forwards; }
+@keyframes particleFly { 0%{transform:translate(0,0) scale(1);opacity:1} 100%{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0} }
+
+/* FACT BANNER */
+.fact-banner {
+  position:fixed; bottom:0; left:0; right:0; z-index:50;
+  background:linear-gradient(90deg,#FFD700,#FF8C00); color:#000;
+  font-size:14px; font-weight:800; padding:12px 20px; text-align:center;
+  animation:slideUp 0.4s ease; display:flex; align-items:center; justify-content:center; gap:8px;
+}
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+
+/* LEVEL UP */
+.level-up-overlay {
+  position:fixed; inset:0; z-index:200; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  background:rgba(0,0,0,0.75); backdrop-filter:blur(10px);
+}
+.level-up-title { font-family:'Boogaloo',cursive; font-size:90px; animation:levelBounce 0.8s ease; }
+@keyframes levelBounce { 0%{transform:scale(0) rotate(-15deg)} 60%{transform:scale(1.25) rotate(5deg)} 100%{transform:scale(1) rotate(0)} }
+.level-up-animals { font-size:55px; animation:cheerRow 0.5s ease-in-out infinite alternate; }
+@keyframes cheerRow { from{transform:translateY(0)} to{transform:translateY(-15px)} }
+.level-up-continue { margin-top:28px; background:#FFD700; color:#000; border:none; border-radius:50px; padding:14px 55px; font-family:'Boogaloo',cursive; font-size:26px; cursor:pointer; animation:btnPulse 1s infinite; }
+
+/* PAUSE */
+.pause-overlay {
+  position:fixed; inset:0; z-index:150; display:none; align-items:center; justify-content:center;
+  background:rgba(0,0,0,0.82); backdrop-filter:blur(10px); flex-direction:column; gap:18px;
+}
+.pause-overlay.active { display:flex; }
+.pause-title { font-family:'Boogaloo',cursive; font-size:65px; }
+.pause-animal { font-size:80px; animation:animalBounce 1.5s infinite; }
+.pause-btn { padding:14px 44px; border-radius:50px; border:none; cursor:pointer; font-family:'Boogaloo',cursive; font-size:24px; transition:transform 0.2s; }
+.pause-btn:hover { transform:scale(1.06); }
+
+/* GAME OVER */
+#gameover-screen { text-align:center; z-index:10; }
+.go-title { font-family:'Boogaloo',cursive; font-size:70px; }
+.go-score { font-family:'Boogaloo',cursive; font-size:100px; color:#FFD700; text-shadow:0 0 40px rgba(255,215,0,0.6); }
+.go-grade { font-size:24px; margin:10px 0; }
+.go-animals { font-size:55px; margin:10px 0; }
+.go-stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; max-width:500px; margin:18px auto; }
+.go-stat { background:rgba(255,255,255,0.07); border-radius:14px; padding:14px; border:1px solid rgba(255,255,255,0.1); }
+.go-stat-num { font-family:'Boogaloo',cursive; font-size:30px; }
+.go-stat-lbl { font-size:10px; color:#888; text-transform:uppercase; font-weight:800; }
+.action-btns { display:flex; gap:14px; margin-top:20px; flex-wrap:wrap; justify-content:center; }
+.action-btn { padding:14px 30px; border-radius:50px; border:none; cursor:pointer; font-family:'Boogaloo',cursive; font-size:22px; transition:all 0.3s; }
+.action-btn:hover { transform:translateY(-5px); }
+.btn-replay { background:linear-gradient(135deg,#FFD700,#FF8C00); color:#000; }
+.btn-home { background:rgba(255,255,255,0.12); color:white; border:2px solid rgba(255,255,255,0.3); }
+.btn-share { background:linear-gradient(135deg,#7BC67E,#3EC6E0); color:#000; }
+.stars { font-size:50px; letter-spacing:8px; margin:10px 0; }
+
+/* CONFETTI */
+.confetti-piece {
+  position:fixed; z-index:300; pointer-events:none;
+  animation:confettiFall linear forwards;
+}
+@keyframes confettiFall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
+
+/* RIPPLE */
+.ripple {
+  position:fixed; border-radius:50%; pointer-events:none; z-index:200;
+  animation:rippleOut 0.6s ease-out forwards;
+}
+@keyframes rippleOut { 0%{width:0;height:0;opacity:0.8} 100%{width:200px;height:200px;opacity:0} }
+
+/* STAR BG */
+.star-bg { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; overflow:hidden; }
+.star { position:absolute; border-radius:50%; background:white; animation:twinkle linear infinite; }
+@keyframes twinkle { 0%,100%{opacity:0.1} 50%{opacity:0.7} }
+
+/* SCORE POP */
+.score-pop { position:fixed; font-family:'Boogaloo',cursive; font-size:28px; color:#FFD700; pointer-events:none; z-index:150; animation:scorePop 1s ease forwards; text-shadow:0 2px 8px rgba(0,0,0,0.8); }
+@keyframes scorePop { 0%{opacity:1;transform:translate(-50%,-50%) scale(0.6)} 50%{opacity:1;transform:translate(-50%,-150%) scale(1.2)} 100%{opacity:0;transform:translate(-50%,-250%) scale(1)} }
+
+/* FUN FACT */
+#funFact { background:rgba(255,215,0,0.1); border:1px solid rgba(255,215,0,0.3); border-radius:14px; padding:14px; max-width:450px; font-size:13px; margin:10px 0; color:#FFD700; text-align:center; font-weight:700; }
+
+/* COMBO METER */
+.combo-meter {
+  position:fixed; top:80px; right:20px; z-index:60; text-align:center;
+  background:rgba(0,0,0,0.5); border:2px solid rgba(255,215,0,0.3);
+  border-radius:16px; padding:10px 16px; backdrop-filter:blur(8px);
+  opacity:0; transition:opacity 0.3s; min-width:90px;
+}
+.combo-meter.active { opacity:1; }
+.combo-label { font-size:9px; color:#888; text-transform:uppercase; font-weight:800; letter-spacing:1px; }
+.combo-num { font-family:'Boogaloo',cursive; font-size:42px; color:#FFD700; animation:comboNum 0.3s ease; }
+@keyframes comboNum { from{transform:scale(1.5)} to{transform:scale(1)} }
+.combo-fire { font-size:24px; }
+</style>
+</head>
+<body>
+
+<div class="star-bg" id="starBg"></div>
+
+<!-- ============ INTRO / SPLASH SCREEN ============ -->
+<div class="screen active" id="intro-screen">
+  <div class="intro-animals">
+    <div class="animal-char" onclick="this.style.animation='none';void this.offsetWidth;this.style.animation=''">
+      🐻<div class="speech-bubble">Let's sort! 🌿</div>
+    </div>
+    <div class="animal-char">
+      🐸<div class="speech-bubble">Save Earth! 🌍</div>
+    </div>
+    <div class="animal-char" style="font-size:80px">
+      🦁<div class="speech-bubble">Be a Hero! 💪</div>
+    </div>
+    <div class="animal-char">
+      🐧<div class="speech-bubble">No more trash! ♻️</div>
+    </div>
+    <div class="animal-char">
+      🦊<div class="speech-bubble">Let's go! 🚀</div>
+    </div>
+  </div>
+
+  <div class="intro-title">TRASH HEROES</div>
+  <div class="intro-subtitle">♻️ Save the Planet, One Bin at a Time! 🌍</div>
+
+  <!-- ANIMATED SCENE -->
+  <div class="intro-kids-scene" id="kidsScene">
+    <div class="scene-sun">☀️</div>
+    <div class="scene-tree" style="left:30px">🌳</div>
+    <div class="scene-tree" style="right:40px;animation-delay:1s">🌲</div>
+    <div class="scene-tree" style="left:55%;animation-delay:2s">🌿</div>
+    <!-- Animated kids (SVG inline) -->
+    <div class="kid-svg" id="kid1" style="animation-duration:12s;animation-delay:0s">
+      <svg width="50" height="80" viewBox="0 0 50 80">
+        <!-- Body -->
+        <circle cx="25" cy="15" r="12" fill="#FDBCB4"/>
+        <rect x="14" y="26" width="22" height="28" rx="5" fill="#FF6B6B"/>
+        <!-- Arms holding recycling bin -->
+        <line x1="14" y1="32" x2="5" y2="45" stroke="#FDBCB4" stroke-width="4" stroke-linecap="round"/>
+        <line x1="36" y1="32" x2="45" y2="45" stroke="#FDBCB4" stroke-width="4" stroke-linecap="round"/>
+        <!-- Legs -->
+        <line x1="20" y1="54" x2="18" y2="72" stroke="#4A4A8A" stroke-width="5" stroke-linecap="round"/>
+        <line x1="30" y1="54" x2="32" y2="72" stroke="#4A4A8A" stroke-width="5" stroke-linecap="round"/>
+        <!-- Recycle symbol -->
+        <text x="18" y="42" font-size="10" fill="white" font-weight="bold">♻️</text>
+        <!-- Hair -->
+        <ellipse cx="25" cy="8" rx="11" ry="7" fill="#8B4513"/>
+        <!-- Eyes -->
+        <circle cx="21" cy="14" r="2" fill="#333"/>
+        <circle cx="29" cy="14" r="2" fill="#333"/>
+        <!-- Smile -->
+        <path d="M20 20 Q25 24 30 20" stroke="#333" stroke-width="1.5" fill="none"/>
+      </svg>
+    </div>
+    <div class="kid-svg" id="kid2" style="animation-duration:9s;animation-delay:3s;bottom:48px">
+      <svg width="45" height="70" viewBox="0 0 45 70">
+        <circle cx="22" cy="13" r="11" fill="#8D5524"/>
+        <ellipse cx="22" cy="6" rx="10" ry="6" fill="#1a1a1a"/>
+        <rect x="12" y="23" width="20" height="25" rx="5" fill="#3EC6E0"/>
+        <text x="13" y="38" font-size="11" fill="white" font-weight="bold">🌱</text>
+        <line x1="12" y1="29" x2="4" y2="40" stroke="#8D5524" stroke-width="4" stroke-linecap="round"/>
+        <line x1="32" y1="29" x2="40" y2="40" stroke="#8D5524" stroke-width="4" stroke-linecap="round"/>
+        <line x1="18" y1="48" x2="16" y2="64" stroke="#2d2d7a" stroke-width="5" stroke-linecap="round"/>
+        <line x1="28" y1="48" x2="30" y2="64" stroke="#2d2d7a" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="18" cy="12" r="2" fill="#fff"/>
+        <circle cx="26" cy="12" r="2" fill="#fff"/>
+        <path d="M16 18 Q22 22 28 18" stroke="#333" stroke-width="1.5" fill="none"/>
+      </svg>
+    </div>
+    <div class="recycle-truck">🚛</div>
+    <div class="scene-ground"></div>
+  </div>
+
+  <button class="intro-play-btn" onclick="showHomeScreen()">
+    🚀 START PLAYING!
+  </button>
+  <div class="intro-best">🏆 Best Score: <span id="introBest">0</span> points</div>
+</div>
+
+<!-- ============ HOME SCREEN ============ -->
+<div class="screen" id="home-screen" style="z-index:10">
+  <!-- Decorative animals floating -->
+  <div style="display:flex;gap:16px;margin-bottom:20px;align-items:flex-end">
+    <span style="font-size:46px;animation:animalBounce 2s infinite;animation-delay:0.2s">🐻</span>
+    <div>
+      <div style="font-family:'Boogaloo',cursive;font-size:52px;background:linear-gradient(90deg,#FFD700,#FF6B9D,#00D4FF,#7FFF00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:400%;animation:rainbow 3s linear infinite">TRASH HEROES</div>
+      <div style="font-size:14px;color:#aaa;font-weight:700;text-align:center">Choose your mission, hero!</div>
+    </div>
+    <span style="font-size:46px;animation:animalBounce 2s infinite;animation-delay:0.8s">🦁</span>
+  </div>
+
+  <div class="section-label">Choose Your Mode</div>
+  <div class="mode-grid">
+    <div class="mode-card selected" data-mode="classic" onclick="selectMode('classic',this)">
+      <span class="mode-icon">♻️</span>
+      <div class="mode-name">Classic</div>
+      <div class="mode-desc">Sort waste before time runs out!</div>
+      <span class="mode-badge" style="background:rgba(62,198,224,0.2);color:#3EC6E0">Standard</span>
+    </div>
+    <div class="mode-card" data-mode="blitz" onclick="selectMode('blitz',this)">
+      <span class="mode-icon">⚡</span>
+      <div class="mode-name">Blitz!</div>
+      <div class="mode-desc">Super fast! 30 seconds only!</div>
+      <span class="mode-badge" style="background:rgba(255,215,0,0.2);color:#FFD700">Speed</span>
+    </div>
+    <div class="mode-card" data-mode="zen" onclick="selectMode('zen',this)">
+      <span class="mode-icon">🌿</span>
+      <div class="mode-name">Zen Mode</div>
+      <div class="mode-desc">No timer, learn at your pace</div>
+      <span class="mode-badge" style="background:rgba(123,198,126,0.2);color:#7BC67E">Chill</span>
+    </div>
+    <div class="mode-card" data-mode="endless" onclick="selectMode('endless',this)">
+      <span class="mode-icon">🌀</span>
+      <div class="mode-name">Endless</div>
+      <div class="mode-desc">Go until you make 3 mistakes!</div>
+      <span class="mode-badge" style="background:rgba(224,92,151,0.2);color:#E05C97">Survive</span>
+    </div>
+  </div>
+
+  <div class="section-label">Difficulty</div>
+  <div class="diff-row">
+    <button class="diff-btn easy active" onclick="selectDiff('easy',this)">🌱 Easy</button>
+    <button class="diff-btn medium" onclick="selectDiff('medium',this)">🔥 Medium</button>
+    <button class="diff-btn hard" onclick="selectDiff('hard',this)">💀 Hard</button>
+  </div>
+
+  <button class="start-btn" onclick="showTutorial()">🚀 PLAY NOW!</button>
+  <div style="margin-top:16px;font-size:13px;color:#888;font-weight:700">🏆 Best: <span id="bestScoreHome" style="color:#FFD700">0</span> pts</div>
+</div>
+
+<!-- MASCOT -->
+<div class="mascot-area" id="mascotArea" style="display:none">
+  <div class="mascot-bubble" id="mascotBubble">Recycle, compost, trash? 🤔</div>
+  <div class="mascot-main" id="mascotChar">🐻</div>
+</div>
+
+<!-- ============ TUTORIAL OVERLAY ============ -->
+<div class="tutorial-overlay" id="tutorialOverlay">
+  <div class="tutorial-card">
+    <div class="tut-animal" id="tutAnimal">🦁</div>
+    <div class="tutorial-step-title">How to Play! 🎮</div>
+    <p style="font-size:14px;color:#ccc;margin-bottom:12px">Waste items appear on the conveyor belt. Sort them into the right bin before time runs out!</p>
+    <div class="tutorial-bins">
+      <div class="tut-bin" style="background:rgba(62,198,224,0.2);border:2px solid #3EC6E0">
+        <div class="tut-bin-icon">🗑️</div>
+        <div class="tut-bin-name" style="color:#3EC6E0">Recycle</div>
+        <div style="font-size:9px;color:#aaa">Paper, Cans, Plastic</div>
+      </div>
+      <div class="tut-bin" style="background:rgba(123,198,126,0.2);border:2px solid #7BC67E">
+        <div class="tut-bin-icon">🌱</div>
+        <div class="tut-bin-name" style="color:#7BC67E">Compost</div>
+        <div style="font-size:9px;color:#aaa">Food, Plants</div>
+      </div>
+      <div class="tut-bin" style="background:rgba(242,140,56,0.2);border:2px solid #F28C38">
+        <div class="tut-bin-icon">🚮</div>
+        <div class="tut-bin-name" style="color:#F28C38">Trash</div>
+        <div style="font-size:9px;color:#aaa">Non-recyclable</div>
+      </div>
+      <div class="tut-bin" style="background:rgba(224,92,151,0.2);border:2px solid #E05C97">
+        <div class="tut-bin-icon">☣️</div>
+        <div class="tut-bin-name" style="color:#E05C97">Hazard</div>
+        <div style="font-size:9px;color:#aaa">Chemicals, Batteries</div>
+      </div>
+      <div class="tut-bin" style="background:rgba(155,89,182,0.2);border:2px solid #9B59B6">
+        <div class="tut-bin-icon">📱</div>
+        <div class="tut-bin-name" style="color:#9B59B6">E-Waste</div>
+        <div style="font-size:9px;color:#aaa">Electronics</div>
+      </div>
+    </div>
+    <div class="tutorial-tip">⌨️ Use keys <strong>1–5</strong> or <strong>Q/W/E/R/T</strong> or click bins!</div>
+    <div class="tutorial-tip">⚡ Build streaks for bonus points & power-ups!</div>
+    <div class="tutorial-tip">🐾 Your animal friends cheer when you're right!</div>
+    <button class="tut-next" onclick="startGame()">Let's GO! 🚀</button>
+  </div>
+</div>
+
+<!-- ============ GAME SCREEN ============ -->
+<div class="screen" id="game-screen">
+
+  <!-- HUD -->
+  <div class="hud">
+    <div class="hud-item">
+      <div class="hud-label">Score</div>
+      <div class="hud-value score-val" id="scoreVal">0</div>
+    </div>
+    <div class="hud-item">
+      <div class="hud-label">Lives</div>
+      <div class="hud-value lives-val" id="livesVal">❤️❤️❤️</div>
+    </div>
+    <div class="timer-bar-wrap" id="timerBarWrap">
+      <div class="timer-bar" id="timerBar" style="width:100%"></div>
+    </div>
+    <div class="hud-item">
+      <div class="hud-label">Streak 🔥</div>
+      <div class="hud-value streak-val" id="streakVal">0</div>
+    </div>
+    <div class="hud-item">
+      <div class="hud-label">Level</div>
+      <div class="hud-value level-val" id="levelVal">1</div>
+    </div>
+    <button onclick="togglePause()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:10px;color:white;padding:7px 14px;cursor:pointer;font-size:18px;transition:background 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">⏸</button>
+  </div>
+
+  <!-- Game Area -->
+  <div class="game-area">
+
+    <!-- Cheering Animals Row -->
+    <div class="cheer-animals" id="cheerAnimals">
+      <div class="cheer-animal" id="ca0" title="Click me!">🐻</div>
+      <div class="cheer-animal" id="ca1">🐸</div>
+      <div class="cheer-animal" id="ca2" style="font-size:48px">🦁</div>
+      <div class="cheer-animal" id="ca3">🐧</div>
+      <div class="cheer-animal" id="ca4">🦊</div>
+    </div>
+
+    <!-- Conveyor Belt -->
+    <div class="conveyor-track" id="conveyorTrack">
+      <div id="wasteContainer"></div>
+      <div class="conveyor-belt"></div>
+    </div>
+
+    <!-- Key Hints -->
+    <div class="key-hints">
+      <div class="key-hint"><span>1</span>/<span>Q</span> Recycle</div>
+      <div class="key-hint"><span>2</span>/<span>W</span> Compost</div>
+      <div class="key-hint"><span>3</span>/<span>E</span> Trash</div>
+      <div class="key-hint"><span>4</span>/<span>R</span> Hazard</div>
+      <div class="key-hint"><span>5</span>/<span>T</span> E-Waste</div>
+    </div>
+
+    <!-- Bins -->
+    <div class="bins-row" id="binsRow">
+      <div class="bin" data-type="recycle" onclick="sortWaste('recycle')">
+        <span class="bin-animal">🐻</span>
+        <span class="bin-icon">🗑️</span>
+        <div class="bin-name">Recycle</div>
+        <div class="bin-count" id="count-recycle">0 items</div>
+        <div class="bin-fill-bar" id="fill-recycle" style="width:0%"></div>
+      </div>
+      <div class="bin" data-type="compost" onclick="sortWaste('compost')">
+        <span class="bin-animal">🐸</span>
+        <span class="bin-icon">🌱</span>
+        <div class="bin-name">Compost</div>
+        <div class="bin-count" id="count-compost">0 items</div>
+        <div class="bin-fill-bar" id="fill-compost" style="width:0%"></div>
+      </div>
+      <div class="bin" data-type="trash" onclick="sortWaste('trash')">
+        <span class="bin-animal">🦁</span>
+        <span class="bin-icon">🚮</span>
+        <div class="bin-name">Trash</div>
+        <div class="bin-count" id="count-trash">0 items</div>
+        <div class="bin-fill-bar" id="fill-trash" style="width:0%"></div>
+      </div>
+      <div class="bin" data-type="hazard" onclick="sortWaste('hazard')">
+        <span class="bin-animal">🐧</span>
+        <span class="bin-icon">☣️</span>
+        <div class="bin-name">Hazard</div>
+        <div class="bin-count" id="count-hazard">0 items</div>
+        <div class="bin-fill-bar" id="fill-hazard" style="width:0%"></div>
+      </div>
+      <div class="bin" data-type="ewaste" onclick="sortWaste('ewaste')">
+        <span class="bin-animal">🦊</span>
+        <span class="bin-icon">📱</span>
+        <div class="bin-name">E-Waste</div>
+        <div class="bin-count" id="count-ewaste">0 items</div>
+        <div class="bin-fill-bar" id="fill-ewaste" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- Power-ups -->
+    <div class="powerup-row">
+      <button class="powerup-btn" id="pu-hint" onclick="usePowerup('hint')" disabled>
+        <span class="pu-icon">💡</span>Hint <span class="pu-count" id="pu-hint-count">0</span>
+      </button>
+      <button class="powerup-btn" id="pu-slow" onclick="usePowerup('slow')" disabled>
+        <span class="pu-icon">🐢</span>Slow <span class="pu-count" id="pu-slow-count">0</span>
+      </button>
+      <button class="powerup-btn" id="pu-skip" onclick="usePowerup('skip')" disabled>
+        <span class="pu-icon">⏭️</span>Skip <span class="pu-count" id="pu-skip-count">0</span>
+      </button>
+      <button class="powerup-btn" id="pu-2x" onclick="usePowerup('2x')" disabled>
+        <span class="pu-icon">✨</span>2X <span class="pu-count" id="pu-2x-count">0</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- COMBO METER -->
+<div class="combo-meter" id="comboMeter">
+  <div class="combo-label">Combo!</div>
+  <div class="combo-num" id="comboNum">0</div>
+  <div class="combo-fire">🔥</div>
+</div>
+
+<!-- ============ LEVEL UP OVERLAY ============ -->
+<div class="level-up-overlay" id="levelUpOverlay" style="display:none">
+  <div class="level-up-animals" id="levelAnimals">🐻🐸🦁🐧🦊</div>
+  <div class="level-up-title">🎉</div>
+  <div style="font-family:'Boogaloo',cursive;font-size:48px;color:white">LEVEL UP!</div>
+  <div style="color:#FFD700;font-size:22px;font-weight:800;margin-top:8px" id="levelUpText">Level 2 - Going faster! 🏃</div>
+  <button class="level-up-continue" onclick="continueLevelUp()">Continue! →</button>
+</div>
+
+<!-- ============ PAUSE OVERLAY ============ -->
+<div class="pause-overlay" id="pauseOverlay">
+  <div class="pause-animal">🐻</div>
+  <div class="pause-title">⏸ PAUSED</div>
+  <p style="color:#aaa;font-weight:700;margin-top:-10px">Take a breather!</p>
+  <button class="pause-btn" style="background:#FFD700;color:#000" onclick="togglePause()">▶ Resume</button>
+  <button class="pause-btn" style="background:rgba(255,255,255,0.12);color:white;border:2px solid rgba(255,255,255,0.3)" onclick="goHome()">🏠 Home</button>
+</div>
+
+<!-- ============ GAME OVER SCREEN ============ -->
+<div class="screen" id="gameover-screen">
+  <div class="go-title" id="goTitle">🎮 GAME OVER!</div>
+  <div class="go-animals" id="goAnimals">😢😢😢</div>
+  <div class="stars" id="goStars">⭐</div>
+  <div class="go-score" id="goScore">0</div>
+  <div class="go-grade" id="goGrade">Keep Practicing! 💪</div>
+
+  <div class="go-stats">
+    <div class="go-stat">
+      <div class="go-stat-num" id="statCorrect" style="color:#7FFF00">0</div>
+      <div class="go-stat-lbl">✅ Correct</div>
+    </div>
+    <div class="go-stat">
+      <div class="go-stat-num" id="statWrong" style="color:#E05C97">0</div>
+      <div class="go-stat-lbl">❌ Wrong</div>
+    </div>
+    <div class="go-stat">
+      <div class="go-stat-num" id="statStreak" style="color:#FFD700">0</div>
+      <div class="go-stat-lbl">🔥 Best Streak</div>
+    </div>
+    <div class="go-stat">
+      <div class="go-stat-num" id="statLevel" style="color:#3EC6E0">1</div>
+      <div class="go-stat-lbl">📈 Max Level</div>
+    </div>
+    <div class="go-stat">
+      <div class="go-stat-num" id="statAccuracy" style="color:#9B59B6">0%</div>
+      <div class="go-stat-lbl">🎯 Accuracy</div>
+    </div>
+    <div class="go-stat">
+      <div class="go-stat-num" id="statNew" style="color:#F28C38">—</div>
+      <div class="go-stat-lbl">🌟 New Best?</div>
+    </div>
+  </div>
+
+  <div id="funFact"></div>
+
+  <div class="action-btns">
+    <button class="action-btn btn-replay" onclick="restartGame()">🔄 Play Again</button>
+    <button class="action-btn btn-home" onclick="goHome()">🏠 Home</button>
+    <button class="action-btn btn-share" onclick="shareScore()">📣 Share</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const WASTE_DATA = {
+  recycle:[
+    {emoji:'📰',name:'Newspaper',fact:'Recycling 1 ton of paper saves 17 trees!'},
+    {emoji:'🥤',name:'Plastic Bottle',fact:'Plastic bottles can be recycled into fleece jackets!'},
+    {emoji:'🥫',name:'Tin Can',fact:'Steel cans can be recycled forever without losing quality!'},
+    {emoji:'🍶',name:'Glass Jar',fact:'Glass can be recycled endlessly without degrading!'},
+    {emoji:'📦',name:'Cardboard Box',fact:'Cardboard can be recycled up to 7 times!'},
+    {emoji:'🗞️',name:'Magazine',fact:'Recycled paper uses 70% less energy than new paper!'},
+    {emoji:'🧴',name:'Shampoo Bottle',fact:'Empty plastic bottles take 450 years to decompose!'},
+    {emoji:'🧃',name:'Juice Box',fact:'Juice cartons can be recycled into paper products!'},
+    {emoji:'📑',name:'Paper Stack',fact:'Americans use 85 million tons of paper per year!'},
+  ],
+  compost:[
+    {emoji:'🍎',name:'Apple Core',fact:'Food scraps make amazing nutrient-rich fertilizer!'},
+    {emoji:'🍌',name:'Banana Peel',fact:'Banana peels add potassium to compost!'},
+    {emoji:'🥦',name:'Veggie Scraps',fact:'Composting reduces methane from landfills!'},
+    {emoji:'☕',name:'Coffee Grounds',fact:'Coffee grounds attract earthworms to your garden!'},
+    {emoji:'🍂',name:'Fallen Leaves',fact:'Composted leaves create rich humus for soil!'},
+    {emoji:'🌿',name:'Grass Clippings',fact:'Grass clippings are 80% water and decompose fast!'},
+    {emoji:'🥚',name:'Eggshell',fact:'Eggshells add calcium to compost!'},
+    {emoji:'🍞',name:'Stale Bread',fact:'Stale bread can be composted to feed soil microbes!'},
+    {emoji:'🫖',name:'Tea Bag',fact:'Paper tea bags and leaves are compostable!'},
+  ],
+  trash:[
+    {emoji:'🍬',name:'Candy Wrapper',fact:'Plastic wrappers take 20 years to break down!'},
+    {emoji:'🧻',name:'Used Tissue',fact:'Used tissues cannot be recycled due to contamination!'},
+    {emoji:'🩹',name:'Used Band-Aid',fact:'Medical waste must go to general trash for safety!'},
+    {emoji:'🎈',name:'Deflated Balloon',fact:'Balloons are dangerous to marine animals!'},
+    {emoji:'💄',name:'Lipstick',fact:'Cosmetic packaging often cannot be recycled!'},
+    {emoji:'🍬',name:'Candy Bar Wrapper',fact:'Foil-lined wrappers are not recyclable!'},
+    {emoji:'🧆',name:'Food Packaging',fact:'Mixed material packaging is hard to recycle!'},
+  ],
+  hazard:[
+    {emoji:'🔋',name:'Old Battery',fact:'Batteries contain mercury — never put in regular trash!'},
+    {emoji:'💡',name:'Light Bulb',fact:'Fluorescent bulbs contain mercury and need special disposal!'},
+    {emoji:'🧪',name:'Chemical Bottle',fact:'Household chemicals can contaminate groundwater!'},
+    {emoji:'🛢️',name:'Motor Oil',fact:'1 litre of used oil can pollute 1 million litres of water!'},
+    {emoji:'💅',name:'Nail Polish',fact:'Nail polish is flammable — handle as hazardous waste!'},
+    {emoji:'🌡️',name:'Thermometer',fact:'Old thermometers may contain mercury!'},
+    {emoji:'🧯',name:'Fire Extinguisher',fact:'Extinguishers must be professionally recycled!'},
+  ],
+  ewaste:[
+    {emoji:'📱',name:'Old Phone',fact:'Phones contain gold, silver, and rare earth metals!'},
+    {emoji:'💻',name:'Laptop',fact:'E-waste makes up 70% of toxic waste in landfills!'},
+    {emoji:'🖥️',name:'Old Monitor',fact:'Monitors contain lead — recycle them properly!'},
+    {emoji:'⌨️',name:'Keyboard',fact:'Electronics contain plastics that take centuries to degrade!'},
+    {emoji:'🖱️',name:'Computer Mouse',fact:'Recycled electronics save enormous amounts of energy!'},
+    {emoji:'📷',name:'Old Camera',fact:'Camera lenses contain rare earth minerals!'},
+    {emoji:'🎮',name:'Game Controller',fact:'Game controllers contain circuit boards with toxic metals!'},
+    {emoji:'🎧',name:'Broken Earphones',fact:'Headphones contain copper wiring that can be recovered!'},
+  ]
+};
+
+const FACTS=[
+  "Every year, 2.12 billion tons of waste is dumped worldwide! 🌍",
+  "Only 9% of plastic ever made has been recycled! ♻️",
+  "Recycling one aluminum can saves enough energy to run a TV for 3 hours! 📺",
+  "Food waste in landfills produces methane, a potent greenhouse gas! 🌡️",
+  "By 2050, there could be more plastic in the ocean than fish! 🐟",
+  "The average person generates over 4 pounds of trash every day! 🗑️",
+  "Composting can divert 30% of household waste from landfills! 🌱",
+  "Electronic waste is the world's fastest growing waste stream! 💻"
+];
+
+const ANIMALS=['🐻','🐸','🦁','🐧','🦊'];
+const MASCOTS_MSGS=[
+  'You got this! 💪','Sort faster! ⚡','Amazing streak! 🔥',
+  'Recycle saves trees! 🌳','Compost = magic dirt! 🌱','E-waste is toxic! ⚠️',
+  'Nearly there! 🏆','Keep going! 🎯'
+];
+
+// ============================================================
+// GAME STATE
+// ============================================================
+let gameState = {
+  score:0, lives:3, streak:0, bestStreak:0,
+  level:1, correct:0, wrong:0,
+  mode:'classic', difficulty:'easy',
+  timeLeft:60, maxTime:60,
+  paused:false, running:false,
+  currentWaste:null,
+  binCounts:{recycle:0,compost:0,trash:0,hazard:0,ewaste:0},
+  powerups:{hint:2, slow:1, skip:2, '2x':1},
+  doublePoints:false,
+  timerInterval:null, itemTimer:null,
+  activeBins:[], wastePerLevel:0, levelThreshold:10,
+  endlessMistakes:0, itemTimeLeft:0, itemMaxTime:8
+};
+
+let selectedMode='classic', selectedDiff='easy';
+
+const DIFF={
+  easy:  {lives:3, timePerWaste:8,  totalTime:90,  bins:['recycle','compost','trash']},
+  medium:{lives:3, timePerWaste:6,  totalTime:60,  bins:['recycle','compost','trash','hazard']},
+  hard:  {lives:2, timePerWaste:4,  totalTime:45,  bins:['recycle','compost','trash','hazard','ewaste']}
+};
+
+// ============================================================
+// INIT
+// ============================================================
+window.onload=()=>{
+  createStarBg();
+  createClouds();
+  createLeaves();
+  updateBestDisplays();
+  animateTutAnimal();
+  setupCheerAnimalClicks();
+  startMascotCycle();
+};
+
+function createStarBg(){
+  const bg=document.getElementById('starBg');
+  for(let i=0;i<100;i++){
+    const s=document.createElement('div');
+    s.className='star';
+    const sz=Math.random()*2.5+0.5;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;animation-duration:${Math.random()*4+2}s;animation-delay:${Math.random()*4}s;`;
+    bg.appendChild(s);
+  }
+}
+
+function createClouds(){
+  const sky=document.querySelector('.sky-bg')||document.createElement('div');
+  for(let i=0;i<5;i++){
+    const c=document.createElement('div');
+    c.className='cloud';
+    const h=30+Math.random()*40, w=120+Math.random()*200;
+    c.style.cssText=`width:${w}px;height:${h}px;top:${5+Math.random()*30}%;animation-duration:${25+Math.random()*30}s;animation-delay:${Math.random()*20}s;`;
+    document.body.appendChild(c);
+  }
+}
+
+function createLeaves(){
+  const leafEmojis=['🍃','🍂','🌿','🍁'];
+  for(let i=0;i<8;i++){
+    const l=document.createElement('div');
+    l.className='floating-leaf';
+    l.textContent=leafEmojis[Math.floor(Math.random()*leafEmojis.length)];
+    l.style.cssText=`left:${Math.random()*100}%;animation-duration:${10+Math.random()*15}s;animation-delay:${Math.random()*10}s;`;
+    document.body.appendChild(l);
+  }
+}
+
+function updateBestDisplays(){
+  const best=parseInt(localStorage.getItem('trashHeroesBest')||'0');
+  const el1=document.getElementById('introBest');
+  const el2=document.getElementById('bestScoreHome');
+  if(el1) el1.textContent=best;
+  if(el2) el2.textContent=best;
+}
+
+function animateTutAnimal(){
+  const animals=['🦁','🐻','🐸','🐧','🦊'];
+  let i=0;
+  setInterval(()=>{
+    const el=document.getElementById('tutAnimal');
+    if(el){ el.style.animation='none'; void el.offsetWidth; el.textContent=animals[i%animals.length]; el.style.animation='animalBounce 1.5s ease-in-out infinite'; i++; }
+  },2000);
+}
+
+function setupCheerAnimalClicks(){
+  ANIMALS.forEach((_,i)=>{
+    const el=document.getElementById('ca'+i);
+    if(el) el.addEventListener('click',()=>bounceAnimal(i,'celebrate'));
+  });
+}
+
+let mascotMsgIdx=0;
+function startMascotCycle(){
+  setInterval(()=>{
+    const b=document.getElementById('mascotBubble');
+    if(b){ b.textContent=MASCOTS_MSGS[mascotMsgIdx%MASCOTS_MSGS.length]; mascotMsgIdx++; }
+  },5000);
+}
+
+// ============================================================
+// NAV
+// ============================================================
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showHomeScreen(){
+  showScreen('home-screen');
+  document.getElementById('mascotArea').style.display='none';
+  updateBestDisplays();
+}
+
+function selectMode(mode,el){
+  selectedMode=mode;
+  document.querySelectorAll('.mode-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function selectDiff(diff,el){
+  selectedDiff=diff;
+  document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function showTutorial(){
+  const seen=localStorage.getItem('trashHeroesSeenTut');
+  if(seen){ startGame(); return; }
+  document.getElementById('tutorialOverlay').classList.add('active');
+}
+
+// ============================================================
+// GAME START
+// ============================================================
+function startGame(){
+  localStorage.setItem('trashHeroesSeenTut','1');
+  document.getElementById('tutorialOverlay').classList.remove('active');
+
+  const cfg=DIFF[selectedDiff];
+  const mode=selectedMode;
+
+  gameState={
+    score:0, lives:mode==='endless'?999:cfg.lives, streak:0, bestStreak:0,
+    level:1, correct:0, wrong:0, mode, difficulty:selectedDiff,
+    timeLeft:mode==='blitz'?30:mode==='zen'?9999:cfg.totalTime,
+    maxTime:mode==='blitz'?30:mode==='zen'?9999:cfg.totalTime,
+    paused:false, running:true, currentWaste:null,
+    binCounts:{recycle:0,compost:0,trash:0,hazard:0,ewaste:0},
+    powerups:{hint:2, slow:1, skip:2, '2x':1},
+    doublePoints:false, timerInterval:null, itemTimer:null,
+    activeBins:cfg.bins, wastePerLevel:0, levelThreshold:10,
+    endlessMistakes:0, itemTimeLeft:cfg.timePerWaste, itemMaxTime:cfg.timePerWaste
+  };
+
+  showScreen('game-screen');
+  document.getElementById('mascotArea').style.display='block';
+  updateHUD(); setupBins(); spawnWaste();
+  if(mode!=='zen') gameState.timerInterval=setInterval(tickTimer,100);
+  updateComboMeter();
+}
+
+function setupBins(){
+  const bins=document.querySelectorAll('.bin');
+  bins.forEach(b=>{ b.style.display=gameState.activeBins.includes(b.dataset.type)?'':'none'; });
+  Object.keys(gameState.binCounts).forEach(k=>{
+    document.getElementById('count-'+k).textContent='0 items';
+    document.getElementById('fill-'+k).style.width='0%';
+  });
+  updatePowerupUI();
+}
+
+// ============================================================
+// SPAWN WASTE
+// ============================================================
+function getRandomWaste(){
+  const bins=gameState.activeBins;
+  const bin=bins[Math.floor(Math.random()*bins.length)];
+  const items=WASTE_DATA[bin];
+  return {...items[Math.floor(Math.random()*items.length)], type:bin};
+}
+
+function spawnWaste(){
+  if(!gameState.running) return;
+  clearInterval(gameState.itemTimer);
+
+  const waste=getRandomWaste();
+  gameState.currentWaste=waste;
+
+  const container=document.getElementById('wasteContainer');
+  container.innerHTML='';
+
+  const el=document.createElement('div');
+  el.className='waste-item moving';
+  el.id='currentWasteEl';
+  el.innerHTML=`${waste.emoji}<div class="waste-label">${waste.name}</div>`;
+
+  const trackW=document.getElementById('conveyorTrack').offsetWidth;
+  el.style.left=(Math.floor(Math.random()*(trackW-120))+30)+'px';
+  el.onclick=()=>highlightBin(waste.type);
+  container.appendChild(el);
+
+  gameState.itemTimeLeft=gameState.itemMaxTime;
+  if(gameState.mode!=='zen'){
+    gameState.itemTimer=setInterval(()=>{
+      if(gameState.paused) return;
+      gameState.itemTimeLeft-=0.1;
+      const pct=Math.max(0,(gameState.itemTimeLeft/gameState.itemMaxTime)*100);
+      document.getElementById('timerBar').style.width=pct+'%';
+      if(gameState.itemTimeLeft<=0){ clearInterval(gameState.itemTimer); missedItem(); }
+    },100);
+  }
+}
+
+function highlightBin(type){
+  const bin=document.querySelector(`.bin[data-type="${type}"]`);
+  if(bin){ bin.classList.add('highlight'); setTimeout(()=>bin.classList.remove('highlight'),600); }
+}
+
+function missedItem(){
+  if(!gameState.running) return;
+  gameState.wrong++; gameState.streak=0;
+  if(gameState.mode!=='zen'&&gameState.mode!=='endless') gameState.lives--;
+  if(gameState.mode==='endless') gameState.endlessMistakes++;
+  showFeedback('⏰ Too Slow!','#E05C97');
+  shakeScreen(); sadAnimals(); updateHUD(); updateComboMeter();
+  if(shouldEndGame()){ endGame(); return; }
+  setTimeout(spawnWaste,700);
+}
+
+// ============================================================
+// SORT
+// ============================================================
+function sortWaste(binType){
+  if(!gameState.running||gameState.paused||!gameState.currentWaste) return;
+  clearInterval(gameState.itemTimer);
+
+  const waste=gameState.currentWaste;
+  const correct=waste.type===binType;
+
+  // Animate waste out
+  const wasteEl=document.getElementById('currentWasteEl');
+  if(wasteEl) wasteEl.classList.add('flying-out');
+
+  if(correct){
+    const speedBonus=Math.max(0,Math.floor(gameState.itemTimeLeft*5));
+    const streakBonus=Math.floor(gameState.streak/5)*10;
+    let pts=(10+speedBonus+streakBonus)*(gameState.doublePoints?2:1);
+    gameState.score+=pts; gameState.streak++; gameState.correct++; gameState.wastePerLevel++;
+    if(gameState.streak>gameState.bestStreak) gameState.bestStreak=gameState.streak;
+
+    gameState.binCounts[binType]++;
+    const cnt=gameState.binCounts[binType];
+    document.getElementById('count-'+binType).textContent=cnt+' item'+(cnt!==1?'s':'');
+    document.getElementById('fill-'+binType).style.width=Math.min(100,cnt*5)+'%';
+
+    let fb=gameState.streak>=10?'🔥 ON FIRE!':gameState.streak>=5?'⚡ x'+gameState.streak+' Streak!':['✅ Correct!','🎯 Nice!','👏 Great!','💚 Yes!','🌟 Perfect!'][Math.floor(Math.random()*5)];
+    showFeedback(fb,'#7FFF00');
+    showScorePop(pts);
+    celebrateAnimals();
+    spawnParticles(binType);
+
+    if(gameState.streak===5) awardPowerup('hint');
+    if(gameState.streak===10) awardPowerup('slow');
+    if(gameState.streak===15) awardPowerup('2x');
+    if(gameState.correct%7===0) showFact(waste.fact);
+
+    animateBin(binType,true);
+
+    if(gameState.wastePerLevel>=gameState.levelThreshold){ levelUp(); return; }
+  } else {
+    gameState.wrong++; gameState.streak=0;
+    if(gameState.mode!=='zen'&&gameState.mode!=='endless') gameState.lives--;
+    if(gameState.mode==='endless') gameState.endlessMistakes++;
+    showFeedback('❌ Wrong Bin!','#E05C97');
+    shakeScreen(); sadAnimals(); animateBin(binType,false);
+  }
+
+  updateHUD(); updateComboMeter();
+  if(shouldEndGame()){ endGame(); return; }
+  setTimeout(spawnWaste,550);
+}
+
+function shouldEndGame(){
+  if(gameState.mode==='zen') return false;
+  if(gameState.mode==='endless') return gameState.endlessMistakes>=3;
+  return gameState.lives<=0;
+}
+
+function animateBin(type,correct){
+  const bin=document.querySelector(`.bin[data-type="${type}"]`);
+  if(!bin) return;
+  bin.classList.add(correct?'correct-flash':'wrong-flash');
+  setTimeout(()=>bin.classList.remove('correct-flash','wrong-flash'),500);
+}
+
+// ============================================================
+// ANIMALS
+// ============================================================
+function bounceAnimal(idx,cls){
+  const el=document.getElementById('ca'+idx);
+  if(!el) return;
+  el.classList.remove('celebrate','sad');
+  void el.offsetWidth;
+  el.classList.add(cls);
+  setTimeout(()=>el.classList.remove(cls),700);
+}
+
+function celebrateAnimals(){
+  const idx=Math.floor(Math.random()*ANIMALS.length);
+  bounceAnimal(idx,'celebrate');
+  if(gameState.streak>=5){
+    ANIMALS.forEach((_,i)=>setTimeout(()=>bounceAnimal(i,'celebrate'),i*100));
+  }
+}
+
+function sadAnimals(){
+  const idx=Math.floor(Math.random()*ANIMALS.length);
+  bounceAnimal(idx,'sad');
+}
+
+// ============================================================
+// PARTICLES
+// ============================================================
+function spawnParticles(binType){
+  const colors={recycle:'#3EC6E0',compost:'#7BC67E',trash:'#F28C38',hazard:'#E05C97',ewaste:'#9B59B6'};
+  const col=colors[binType]||'#FFD700';
+  const emojis=['✨','⭐','💫','🌟','🎉'];
+  for(let i=0;i<8;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    const angle=Math.random()*Math.PI*2;
+    const dist=80+Math.random()*120;
+    p.style.cssText=`left:50%;top:50%;--dx:${Math.cos(angle)*dist}px;--dy:${Math.sin(angle)*dist}px;animation-duration:${0.6+Math.random()*0.4}s;animation-delay:${Math.random()*0.1}s;color:${col}`;
+    p.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(),1100);
+  }
+}
+
+function showScorePop(pts){
+  const el=document.createElement('div');
+  el.className='score-pop';
+  el.textContent=`+${pts}`;
+  el.style.cssText=`left:${30+Math.random()*40}%;top:45%;`;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),1100);
+}
+
+// ============================================================
+// LEVEL UP
+// ============================================================
+function levelUp(){
+  clearInterval(gameState.itemTimer);
+  gameState.level++; gameState.wastePerLevel=0;
+  gameState.levelThreshold=Math.floor(gameState.levelThreshold*1.2);
+  gameState.itemMaxTime=Math.max(2,gameState.itemMaxTime-0.5);
+  gameState.running=false;
+
+  document.getElementById('levelUpText').textContent=`Level ${gameState.level} — Going faster! 🏃`;
+  document.getElementById('levelUpOverlay').style.display='flex';
+  launchConfetti(30);
+
+  // All animals celebrate
+  ANIMALS.forEach((_,i)=>setTimeout(()=>bounceAnimal(i,'celebrate'),i*120));
+}
+
+function continueLevelUp(){
+  document.getElementById('levelUpOverlay').style.display='none';
+  gameState.running=true;
+  updateHUD(); spawnWaste();
+}
+
+// ============================================================
+// TIMER + HUD
+// ============================================================
+function tickTimer(){
+  if(gameState.paused||!gameState.running) return;
+  gameState.timeLeft-=0.1;
+  if(gameState.timeLeft<=0){ clearInterval(gameState.timerInterval); endGame(); }
+}
+
+function updateHUD(){
+  document.getElementById('scoreVal').textContent=gameState.score.toLocaleString();
+  const l=gameState.mode==='endless'?`${3-gameState.endlessMistakes} left`:
+           gameState.mode==='zen'?'∞':
+           '❤️'.repeat(Math.max(0,gameState.lives));
+  document.getElementById('livesVal').textContent=l;
+  document.getElementById('streakVal').textContent=gameState.streak;
+  document.getElementById('levelVal').textContent=gameState.level;
+}
+
+function updateComboMeter(){
+  const m=document.getElementById('comboMeter');
+  const n=document.getElementById('comboNum');
+  if(gameState.streak>=3){
+    m.classList.add('active');
+    n.textContent=gameState.streak;
+    void n.offsetWidth; n.style.animation='none'; void n.offsetWidth; n.style.animation='comboNum 0.3s ease';
+  } else {
+    m.classList.remove('active');
+  }
+}
+
+// ============================================================
+// POWER-UPS
+// ============================================================
+function awardPowerup(type){
+  gameState.powerups[type]++;
+  updatePowerupUI();
+  showFeedback(`🎁 +${type} power-up!`,'#FFD700');
+}
+
+function updatePowerupUI(){
+  ['hint','slow','skip','2x'].forEach(pu=>{
+    const btn=document.getElementById('pu-'+pu);
+    const cnt=gameState.powerups[pu];
+    document.getElementById('pu-'+pu+'-count').textContent=cnt;
+    btn.disabled=cnt<=0;
+  });
+}
+
+function usePowerup(type){
+  if(gameState.powerups[type]<=0) return;
+  gameState.powerups[type]--;
+  updatePowerupUI();
+  if(type==='hint'&&gameState.currentWaste){ highlightBin(gameState.currentWaste.type); showFeedback('💡 Hint!','#FFD700'); }
+  if(type==='slow'){ gameState.itemTimeLeft+=5; gameState.itemMaxTime+=5; showFeedback('🐢 Slowed!','#3EC6E0'); }
+  if(type==='skip'){ clearInterval(gameState.itemTimer); showFeedback('⏭️ Skipped!','#9B59B6'); setTimeout(spawnWaste,300); }
+  if(type==='2x'){ gameState.doublePoints=true; showFeedback('✨ 2X Points!','#FFD700'); setTimeout(()=>gameState.doublePoints=false,15000); }
+}
+
+// ============================================================
+// FEEDBACK
+// ============================================================
+function showFeedback(text,color){
+  const el=document.createElement('div');
+  el.className='feedback-popup'; el.textContent=text; el.style.color=color;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),950);
+}
+
+function showFact(fact){
+  const ex=document.querySelector('.fact-banner');
+  if(ex) ex.remove();
+  const el=document.createElement('div');
+  el.className='fact-banner';
+  el.innerHTML=`<span style="font-size:20px">🌍</span> DID YOU KNOW? ${fact} <span style="font-size:20px">🐾</span>`;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),4500);
+}
+
+function shakeScreen(){
+  const gs=document.getElementById('game-screen');
+  gs.style.animation='shake 0.4s ease';
+  setTimeout(()=>gs.style.animation='',400);
+}
+
+const ss=document.createElement('style');
+ss.textContent=`@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}`;
+document.head.appendChild(ss);
+
+// ============================================================
+// PAUSE
+// ============================================================
+function togglePause(){
+  gameState.paused=!gameState.paused;
+  document.getElementById('pauseOverlay').classList.toggle('active',gameState.paused);
+}
+
+// ============================================================
+// END GAME
+// ============================================================
+function endGame(){
+  gameState.running=false;
+  clearInterval(gameState.timerInterval);
+  clearInterval(gameState.itemTimer);
+  document.getElementById('mascotArea').style.display='none';
+
+  const total=gameState.correct+gameState.wrong;
+  const acc=total>0?Math.round(gameState.correct/total*100):0;
+  const prev=parseInt(localStorage.getItem('trashHeroesBest')||'0');
+  const isNew=gameState.score>prev;
+  if(isNew) localStorage.setItem('trashHeroesBest',gameState.score);
+
+  const won=gameState.score>=200;
+  document.getElementById('goTitle').textContent=won?'🏆 AMAZING!':gameState.score>=100?'🎉 GREAT JOB!':'🎮 GAME OVER!';
+  document.getElementById('goAnimals').textContent=acc>=80?'🎉🐻🦁🐸🎉':acc>=50?'👍🐧🦊👍':'😢🐻😢';
+  document.getElementById('goScore').textContent=gameState.score.toLocaleString();
+  document.getElementById('goStars').textContent=acc>=90?'⭐⭐⭐':acc>=60?'⭐⭐':'⭐';
+  document.getElementById('goGrade').textContent=acc>=90?'🌟 Eco Hero! Incredible sorting!':acc>=70?'👍 Great job saving the planet!':acc>=50?'🌱 Keep practicing!':'💪 Try again — you got this!';
+  document.getElementById('statCorrect').textContent=gameState.correct;
+  document.getElementById('statWrong').textContent=gameState.wrong;
+  document.getElementById('statStreak').textContent=gameState.bestStreak;
+  document.getElementById('statLevel').textContent=gameState.level;
+  document.getElementById('statAccuracy').textContent=acc+'%';
+  document.getElementById('statNew').textContent=isNew?'🌟 YES!':'—';
+  document.getElementById('funFact').textContent='🌍 '+FACTS[Math.floor(Math.random()*FACTS.length)];
+
+  if(gameState.score>=100) launchConfetti(50);
+  showScreen('gameover-screen');
+  updateBestDisplays();
+}
+
+// ============================================================
+// CONFETTI
+// ============================================================
+function launchConfetti(count){
+  const colors=['#FFD700','#7FFF00','#3EC6E0','#E05C97','#9B59B6','#F28C38','#FF6B9D'];
+  const shapes=['50%','2px'];
+  for(let i=0;i<count;i++){
+    setTimeout(()=>{
+      const el=document.createElement('div');
+      el.className='confetti-piece';
+      const sz=6+Math.random()*12;
+      el.style.cssText=`left:${Math.random()*100}%;top:-10px;background:${colors[Math.floor(Math.random()*colors.length)]};width:${sz}px;height:${sz}px;border-radius:${shapes[Math.floor(Math.random()*shapes.length)]};animation-duration:${1.5+Math.random()*2.5}s;`;
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(),4000);
+    },Math.random()*1200);
+  }
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function restartGame(){ startGame(); }
+
+function goHome(){
+  gameState.running=false;
+  clearInterval(gameState.timerInterval);
+  clearInterval(gameState.itemTimer);
+  document.getElementById('pauseOverlay').classList.remove('active');
+  document.getElementById('tutorialOverlay').classList.remove('active');
+  document.getElementById('levelUpOverlay').style.display='none';
+  document.getElementById('mascotArea').style.display='none';
+  updateBestDisplays();
+  showScreen('home-screen');
+}
+
+function shareScore(){
+  const txt=`I scored ${gameState.score} points in Trash Heroes! 🌍♻️ Can you beat me? #TrashHeroes #EcoGame`;
+  if(navigator.clipboard) navigator.clipboard.writeText(txt).then(()=>showFeedback('📋 Copied!','#7FFF00'));
+  else alert(txt);
+}
+
+// ============================================================
+// KEYBOARD
+// ============================================================
+const KEY_MAP={'1':'recycle','q':'recycle','2':'compost','w':'compost','3':'trash','e':'trash','4':'hazard','r':'hazard','5':'ewaste','t':'ewaste'};
+document.addEventListener('keydown',ev=>{
+  const k=ev.key.toLowerCase();
+  if(k==='p'||k==='escape'){ togglePause(); return; }
+  const bin=KEY_MAP[k];
+  if(bin&&gameState.running&&!gameState.paused) sortWaste(bin);
+  if(k==='z') usePowerup('hint');
+  if(k==='x') usePowerup('slow');
+  if(k==='c') usePowerup('skip');
+  if(k==='v') usePowerup('2x');
+});
+</script>
+</body>
+</html>
